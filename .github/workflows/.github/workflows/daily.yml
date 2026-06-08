@@ -1,24 +1,24 @@
-姓名：每日新闻推送
+name: 每日新闻推送
 
-在……之上:
-计划表:
--克朗：'00，8，16***'
-工作流程分派(_D)：
+on:
+  schedule:
+    - cron: '0 0,8,16 * * *'
+  workflow_dispatch:
 
-工作:
-跑-网上机器人:
-跑步次数-on:ubuntu-latest
-步骤:
--姓名：获取代码
-用途：操作/签出@V4
--姓名：安装python
-用法：操作/设置-python@V5
-和……一起:
-          python-版本：'3.10'
--姓名：安装依赖
-运行：PIP安装请求
--姓名：运行新闻机器人
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 获取代码
+        uses: actions/checkout@v4
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: 安装依赖
+        run: pip install requests
+      - name: 运行新闻机器人
         env:
-Tian_API_KEY：${{秘密.Tian_API_KEY}}
-Webhook_URL：${{秘密.Webhook_URL}}
-运行：pythonnews_bot。py
+          TIAN_API_KEY: ${{ secrets.TIAN_API_KEY }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        run: python news_bot.py
