@@ -4,7 +4,7 @@ import os
 
 API_KEY = os.environ["TIAN_API_KEY"]
 WEBHOOK_URL = os.environ["WEBHOOK_URL"]
-KEYWORDS = ["芯片", "存储", "AI", "煤炭", "电力", "半导体", "光模块", "新能源", "电池"]
+KEYWORDS = ["chip", "storage", "AI", "coal", "power", "semiconductor", "optical", "new energy", "battery"]
 
 def fetch_news():
     url = f"http://api.tianapi.com/caijing/index?key={API_KEY}&num=30"
@@ -14,10 +14,10 @@ def fetch_news():
         if data.get('code') == 200:
             return data.get('newslist', [])
         else:
-            print("API错误:", data.get('msg'))
+            print("API error:", data.get('msg'))
             return []
     except Exception as e:
-        print("请求失败:", e)
+        print("Request failed:", e)
         return []
 
 def filter_news(news_list):
@@ -27,7 +27,7 @@ def filter_news(news_list):
         content = item.get('content', '')
         text = title + content
         for kw in KEYWORDS:
-            if kw in text:
+            if kw.lower() in text.lower():
                 important.append({
                     'title': title,
                     'time': item.get('ctime', ''),
@@ -42,14 +42,14 @@ def send_wechat(content):
     try:
         resp = requests.post(WEBHOOK_URL, json=data, headers=headers)
         if resp.json().get('errcode') == 0:
-            print("推送成功")
+            print("Push success")
         else:
-            print("推送失败", resp.text)
+            print("Push failed", resp.text)
     except Exception as e:
-        print("推送异常", e)
+        print("Push exception", e)
 
 def main():
-    print("开始抓取新闻...")
+    print("Fetching news...")
     news = fetch_news()
     if not news:
         return
@@ -57,12 +57,12 @@ def main():
     if important:
         from datetime import datetime
         now = datetime.now().strftime('%Y-%m-%d %H:%M')
-        msg = f"📰 重要新闻 {now}\n"
+        msg = f"Important news {now}\n"
         for i, n in enumerate(important[:5], 1):
             msg += f"{i}. {n['title']}\n"
         send_wechat(msg)
     else:
-        send_wechat("暂无关键词相关新闻")
+        send_wechat("No relevant news found.")
 
 if __name__ == "__main__":
     main()
