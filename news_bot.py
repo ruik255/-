@@ -1,68 +1,68 @@
-进口请求
-进口JSON
-进口操作系统
+import requests
+import json
+import os
 
-API_KEY=os。环境["TIAN_API_KEY"]
-webhook_URL=os。环境["WEBHOOK_URL"]
-关键字=["芯片", "存储", "AI", "煤炭", "电力", "半导体", "光模块", "新能源", "电池"]
+API_KEY = os.environ["TIAN_API_KEY"]
+WEBHOOK_URL = os.environ["WEBHOOK_URL"]
+KEYWORDS = ["芯片", "存储", "AI", "煤炭", "电力", "半导体", "光模块", "新能源", "电池"]
 
-定义fetch_news():
-URL=f"http://api.tianapi.com/caijing/index?key={API_KEY}&num=30"
-尝试:
-RESP=请求。得到(URL，超时=10)
-data=resp.JSON()
-        如果数据。得到('代码')==200:
-            返回数据。得到('新闻列表', [])
-其他:
-            打印("API错误："，数据。得到('msg'))
-返回[]
-除……之外例外作为e：
-打印("请求失败:"，e)
-返回[]
+def fetch_news():
+    url = f"http://api.tianapi.com/caijing/index?key={API_KEY}&num=30"
+    try:
+        resp = requests.get(url, timeout=10)
+        data = resp.json()
+        if data.get('code') == 200:
+            return data.get('newslist', [])
+        else:
+            print("API错误:", data.get('msg'))
+            return []
+    except Exception as e:
+        print("请求失败:", e)
+        return []
 
-定义过滤器新闻(_N)(新闻列表(_L))：
-重要=[]
-为项在……内新闻列表(_L)：
-标题=项目。得到('标题'，”)
-内容=项目。得到('内容', '')
-文本=标题+内容
-为千瓦在…… 内关键字：
-如果千瓦在…… 内文本：
-重要的。追加({
-'标题'：标题，
-'时间'：项。得到('ctime'，")，
-'来源'：项。 得到('来源', '')
+def filter_news(news_list):
+    important = []
+    for item in news_list:
+        title = item.get('title', '')
+        content = item.get('content', '')
+        text = title + content
+        for kw in KEYWORDS:
+            if kw in text:
+                important.append({
+                    'title': title,
+                    'time': item.get('ctime', ''),
+                    'source': item.get('source', '')
                 })
-打破
-返回重要的
+                break
+    return important
 
-定义 发送_微信(内容):
-数据={"消息类型": "文本", "文本": {"内容"：内容[:2000]}}
-标题={"内容类型"："应用程序/JSON"}
-尝试:
-RESP=请求.邮件(webhook_URL，json=数据，headers=headers)
-如果RESP.JSON().得到('错误代码')==0：
-打印("推送成功")
-其他:
-打印("推送失败"，RESP.文本)
-除……之外例外作为e：
-打印("推送异常"，e)
+def send_wechat(content):
+    data = {"msgtype": "text", "text": {"content": content[:2000]}}
+    headers = {"Content-Type": "application/json"}
+    try:
+        resp = requests.post(WEBHOOK_URL, json=data, headers=headers)
+        if resp.json().get('errcode') == 0:
+            print("推送成功")
+        else:
+            print("推送失败", resp.text)
+    except Exception as e:
+        print("推送异常", e)
 
-定义 主要的():
-打印("开始抓取新闻...")
-新闻=fetch_news()
-如果 不新闻：
-返回
-重要=过滤器新闻(_N)(新闻)
-如果重要的：
-从……起datetime进口datetime
-now=日期时间.现在().strftime('%Y-%m-%d%H：%M')
-信息=f"📰 重要新闻{现在}\n"
-为I，n在...内列举(重要的[：5]，1)：
-MSG+=f"{我}.{n['标题']}\n"
-发送_微信(味精)
-其他:
-发送_微信("暂无关键词相关新闻")
+def main():
+    print("开始抓取新闻...")
+    news = fetch_news()
+    if not news:
+        return
+    important = filter_news(news)
+    if important:
+        from datetime import datetime
+        now = datetime.now().strftime('%Y-%m-%d %H:%M')
+        msg = f"📰 重要新闻 {now}\n"
+        for i, n in enumerate(important[:5], 1):
+            msg += f"{i}. {n['title']}\n"
+        send_wechat(msg)
+    else:
+        send_wechat("暂无关键词相关新闻")
 
-如果__名称__=="__主要的__"：
-主要的()
+if __name__ == "__main__":
+    main()
