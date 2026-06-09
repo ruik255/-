@@ -1,10 +1,17 @@
 import requests
 import json
 import os
+from datetime import datetime
 
 API_KEY = os.environ["TIAN_API_KEY"]
 WEBHOOK_URL = os.environ["WEBHOOK_URL"]
-KEYWORDS = ["芯片", "存储", "AI", "煤炭", "电力", "半导体", "光模块", "新能源", "电池", "科技", "政策", "工信部", "发改委", "能源", "电池", "新能源车"]
+
+# 关键词（使用中文，可自己增减）
+KEYWORDS = [
+    "芯片", "存储", "半导体", "光模块", "AI", "人工智能",
+    "煤炭", "电力", "新能源", "电池", "电动车", "光伏",
+    "科技", "政策", "工信部", "发改委", "能源", "涨价", "供需"
+]
 
 def fetch_news():
     url = f"http://api.tianapi.com/caijing/index?key={API_KEY}&num=50"
@@ -56,7 +63,6 @@ def main():
         return
     important = filter_news(news)
     if important:
-        from datetime import datetime
         now = datetime.now().strftime('%Y-%m-%d %H:%M')
         msg = f"📰 重要新闻 {now}\n"
         for i, n in enumerate(important[:10], 1):
